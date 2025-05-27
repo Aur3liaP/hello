@@ -1,16 +1,30 @@
 package fr.diginamic.hello.entities;
 
 public class Ville {
-
+    private int id;
     private String nom;
     private int nbHabitants;
 
     public Ville() {
     }
 
+    public Ville(int id, String nom, int nbHabitants) {
+        this.id = id;
+        this.nom = nom;
+        this.nbHabitants = nbHabitants;
+    }
+
     public Ville(String nom, int nbHabitants) {
         this.nom = nom;
         this.nbHabitants = nbHabitants;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNom() {
