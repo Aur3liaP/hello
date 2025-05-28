@@ -1,19 +1,26 @@
 package fr.diginamic.hello.controleurs;
 
 import fr.diginamic.hello.entities.Ville;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/villes")
 public class VilleControleur {
 
-    private List<Ville> villes = new ArrayList<>();
+    private final List<Ville> villes = new ArrayList<>();
+    private final Validator validator;
 
-    public VilleControleur() {
+    public VilleControleur(Validator validator) {
+        this.validator = validator;
         villes.add(new Ville(1, "Paris", 2161000));
         villes.add(new Ville(2, "Marseille", 861635));
         villes.add(new Ville(3, "Lyon", 513275));
@@ -32,13 +39,20 @@ public class VilleControleur {
     }
 
     @PostMapping
-    public ResponseEntity<String> ajouterVille(@RequestBody Ville nouvelleVille){
+    public ResponseEntity<String> ajouterVille(@Valid @RequestBody Ville nouvelleVille, BindingResult result){
+        if (result.hasErrors()) {
+            String message = result.getFieldErrors().stream().map(e -> e.getDefaultMessage()).collect(Collectors.joining(",\n"));
+            return ResponseEntity.badRequest().body(message);
+        }
+
 
         boolean idExiste = villes.stream().anyMatch(v -> v.getId() == nouvelleVille.getId());
         if (idExiste) {
             return ResponseEntity.badRequest().body("Une ville avec cet ID existe déjà");
         }
-
+        // A la base pas dans controller -> classe service
+        // Il faudrait ajouter des règoles métiers de verifications de nom non null + nbHabitants positif
+        // if (nouvelleVille.getNom() == null || nouvellVille.getNom().trim().length()>3)
         boolean villeExiste = villes.stream().anyMatch(v -> v.getNom().equalsIgnoreCase(nouvelleVille.getNom()));
         if(villeExiste){
             return ResponseEntity.badRequest().body("La ville existe déjà");
@@ -47,6 +61,8 @@ public class VilleControleur {
 
         return ResponseEntity.ok("ville insérée avec succès.");
     }
+
+
 
 
     // Get par l'id
@@ -61,13 +77,23 @@ public class VilleControleur {
                     .get();
             return ResponseEntity.ok(ville);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build(); // ou .status(404).body("message")
         }
+
+        // if (villes.stream().noneMatch(v -> v.getId() == id)) {
+        // return ResponseEntity.status(404).body("message")
+        // } return ResponseEntity.of(villes.stream().filter(v->v.getId() == id)).findAny();
     }
 
     // Put par Id
     @PutMapping("/{id}")
     public ResponseEntity<String> modifierVille(@PathVariable int id, @RequestBody Ville villeModifiee){
+        Errors result = validator.validateObject(villeModifiee);
+
+        if(result.hasErrors()){
+            String message = result.getFieldErrors().stream().map(e->e.getDefaultMessage()).collect(Collectors.joining(",\n"));
+            return ResponseEntity.badRequest().body(message);
+        }
 
         boolean idExiste = villes.stream().anyMatch(v -> v.getId() == id);
         if (idExiste) {
@@ -83,6 +109,18 @@ public class VilleControleur {
         }
         return ResponseEntity.notFound().build();
     }
+/*
+    @PutMapping
+    public ResponseEntity<String> modifierVille(@RequestBody Ville ville){
+     if (villes.stream().noneMatch(v -> v.getId() == ville.getId)) {
+     return ResponseEntity.status(404).body("message")
+     }
+     Ville villeExistante villes.stream().filter(v->v.getId() == ville.getId)).findAny().orElse(null);
+     villeExistante.setNom(villeModifiee.getNom());
+     villeExistante.setNbHabitants(villeModifiee.getNbHabitants());
+     return ResponseEntity.ok("Ville modifiée avec succès");
+     }
+ */
 
     // Delete avec Id
     @DeleteMapping("/{id}")
