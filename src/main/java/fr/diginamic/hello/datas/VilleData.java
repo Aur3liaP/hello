@@ -20,7 +20,7 @@ public class VilleData implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (villeDao.findAllVille().isEmpty()) {
+        if (villeDao.findAll().isEmpty()) {
             Departement parisDept = new Departement("75", "Paris");
             Departement bouchesDuRhone = new Departement("13", "Bouches-du-Rhône");
             Departement rhone = new Departement("69", "Rhône");
@@ -32,27 +32,27 @@ public class VilleData implements CommandLineRunner {
             Departement gironde = new Departement("33", "Gironde");
             Departement nord = new Departement("59", "Nord");
 
-            departementDao.saveDepartement(parisDept);
-            departementDao.saveDepartement(bouchesDuRhone);
-            departementDao.saveDepartement(rhone);
-            departementDao.saveDepartement(hauteGaronne);
-            departementDao.saveDepartement(alpesMaritimes);
-            departementDao.saveDepartement(loireAtlantique);
-            departementDao.saveDepartement(herault);
-            departementDao.saveDepartement(basRhin);
-            departementDao.saveDepartement(gironde);
-            departementDao.saveDepartement(nord);
+            departementDao.save(parisDept);
+            departementDao.save(bouchesDuRhone);
+            departementDao.save(rhone);
+            departementDao.save(hauteGaronne);
+            departementDao.save(alpesMaritimes);
+            departementDao.save(loireAtlantique);
+            departementDao.save(herault);
+            departementDao.save(basRhin);
+            departementDao.save(gironde);
+            departementDao.save(nord);
 
-            villeDao.saveVille(new Ville("Paris", 2161000, parisDept));
-            villeDao.saveVille(new Ville("Marseille", 861635, bouchesDuRhone));
-            villeDao.saveVille(new Ville("Lyon", 513275, rhone));
-            villeDao.saveVille(new Ville("Toulouse", 471941, hauteGaronne));
-            villeDao.saveVille(new Ville("Nice", 342522, alpesMaritimes));
-            villeDao.saveVille(new Ville("Nantes", 309346, loireAtlantique));
-            villeDao.saveVille(new Ville("Montpellier", 285121, herault));
-            villeDao.saveVille(new Ville("Strasbourg", 277270, basRhin));
-            villeDao.saveVille(new Ville("Bordeaux", 252040, gironde));
-            villeDao.saveVille(new Ville("Lille", 232741, nord));
+            villeDao.save(new Ville("Paris", 2161000, parisDept));
+            villeDao.save(new Ville("Marseille", 861635, bouchesDuRhone));
+            villeDao.save(new Ville("Lyon", 513275, rhone));
+            villeDao.save(new Ville("Toulouse", 471941, hauteGaronne));
+            villeDao.save(new Ville("Nice", 342522, alpesMaritimes));
+            villeDao.save(new Ville("Nantes", 309346, loireAtlantique));
+            villeDao.save(new Ville("Montpellier", 285121, herault));
+            villeDao.save(new Ville("Strasbourg", 277270, basRhin));
+            villeDao.save(new Ville("Bordeaux", 252040, gironde));
+            villeDao.save(new Ville("Lille", 232741, nord));
 
             System.out.println("Base de données initialisée avec 10 villes et leurs départements.");
         }

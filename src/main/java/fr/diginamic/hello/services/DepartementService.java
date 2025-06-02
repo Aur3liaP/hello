@@ -16,15 +16,15 @@ public class DepartementService {
     private DepartementDao departementDao;
 
     public List<Departement> getAllDepartements() {
-        return departementDao.findAllDepartement();
+        return departementDao.findAll();
     }
 
     public Departement getDepartementById(int id) {
-        return departementDao.findDepartementById(id);
+        return departementDao.findById(id);
     }
 
     public Departement getDepartementByCode(String code) {
-        return departementDao.findDepartementByCode(code);
+        return departementDao.findByCode(code);
     }
 
     public Departement insertDepartement(Departement departement) {
@@ -32,11 +32,11 @@ public class DepartementService {
             throw new IllegalArgumentException("Un département avec ce code existe déjà");
         }
 
-        return departementDao.saveDepartement(departement);
+        return departementDao.save(departement);
     }
 
     public List<Departement> modifierDepartement(int id, Departement departementModifie) {
-        Departement departementExistant = departementDao.findDepartementById(id);
+        Departement departementExistant = departementDao.findById(id);
         if (departementExistant == null) {
             throw new IllegalArgumentException("Département non trouvé avec l'ID : " + id);
         }
@@ -44,8 +44,8 @@ public class DepartementService {
         departementExistant.setCode(departementModifie.getCode());
         departementExistant.setNom(departementModifie.getNom());
 
-        departementDao.saveDepartement(departementExistant);
-        return departementDao.findAllDepartement();
+        departementDao.save(departementExistant);
+        return departementDao.findAll();
     }
 
     public void deleteDepartement(int id) {
@@ -56,7 +56,7 @@ public class DepartementService {
     }
 
     public List<Ville> getTopVillesByDepartement(int departementId, int limit) {
-        Departement departement = departementDao.findDepartementById(departementId);
+        Departement departement = departementDao.findById(departementId);
         if (departement == null) {
             throw new IllegalArgumentException("Département non trouvé avec l'ID : " + departementId);
         }
@@ -65,7 +65,7 @@ public class DepartementService {
     }
 
     public List<Ville> getVillesByDepartementAndPopulationRange(int departementId, int minPopulation, int maxPopulation) {
-        Departement departement = departementDao.findDepartementById(departementId);
+        Departement departement = departementDao.findById(departementId);
         if (departement == null) {
             throw new IllegalArgumentException("Département non trouvé avec l'ID : " + departementId);
         }

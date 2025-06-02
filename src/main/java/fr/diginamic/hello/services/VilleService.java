@@ -14,15 +14,15 @@ public class VilleService {
     private VilleDao villeDao;
 
     public List<Ville> extractVilles() {
-        return villeDao.findAllVille();
+        return villeDao.findAll();
     }
 
     public Ville extractVille(int id) {
-        return villeDao.findVilleById(id);
+        return villeDao.findById(id);
     }
 
     public Ville extractVille(String nom) {
-        return villeDao.findVilleByNom(nom);
+        return villeDao.findByNom(nom);
     }
 
     public List<Ville> insertVille(Ville ville) {
@@ -30,13 +30,13 @@ public class VilleService {
             throw new IllegalArgumentException("Une ville avec cet Id existe déjà");
         }
 
-        villeDao.saveVille(ville);
-        return villeDao.findAllVille();
+        villeDao.save(ville);
+        return villeDao.findAll();
     }
 
     public List<Ville> modifierVille(int id, Ville villeModifiee) {
 
-        Ville villeExiste = villeDao.findVilleById(id);
+        Ville villeExiste = villeDao.findById(id);
         if (villeExiste == null) {
             throw new IllegalArgumentException("Ville non trouvée avec l'ID : " + id);
         }
@@ -45,16 +45,16 @@ public class VilleService {
         villeExiste.setNbHabitants(villeModifiee.getNbHabitants());
         villeExiste.setDepartement(villeModifiee.getDepartement());
 
-        villeDao.saveVille(villeExiste);
-        return villeDao.findAllVille();
+        villeDao.save(villeExiste);
+        return villeDao.findAll();
     }
 
     public List<Ville> supprimerVille(int id) {
-        boolean villeExiste = villeDao.deleteVilleById(id);
+        boolean villeExiste = villeDao.deleteById(id);
         if (!villeExiste) {
             throw new IllegalArgumentException("Ville non trouvée avec l'ID : " + id);
         }
-        return villeDao.findAllVille();
+        return villeDao.findAll();
     }
 
 }
