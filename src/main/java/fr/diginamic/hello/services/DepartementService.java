@@ -4,69 +4,71 @@ package fr.diginamic.hello.services;
 import fr.diginamic.hello.dao.DepartementDao;
 import fr.diginamic.hello.entities.Departement;
 import fr.diginamic.hello.entities.Ville;
+import fr.diginamic.hello.repos.DepartementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DepartementService {
 
     @Autowired
-    private DepartementDao departementDao;
+    private DepartementRepository departementRepository;
+
+    @Autowired
+    private VilleService villeService;
 
     public List<Departement> getAllDepartements() {
-        return departementDao.findAll();
+        return departementRepository.findAll();
     }
 
-    public Departement getDepartementById(int id) {
-        return departementDao.findById(id);
+    public Optional<Departement> getDepartementById(int id) {
+        return departementRepository.findById(id);
     }
 
-    public Departement getDepartementByCode(String code) {
-        return departementDao.findByCode(code);
+    public Optional<Departement> getDepartementByCode(String code) {
+        return departementRepository.findByCode(code);
     }
 
     public Departement insertDepartement(Departement departement) {
-        if (departementDao.existsByCode(departement.getCode())) {
+        if (departementRepository.existsByCode(departement.getCode())) {
             throw new IllegalArgumentException("Un département avec ce code existe déjà");
         }
 
-        return departementDao.save(departement);
+        return departementRepository.save(departement);
     }
 
-    public List<Departement> modifierDepartement(int id, Departement departementModifie) {
-        Departement departementExistant = departementDao.findById(id);
-        if (departementExistant == null) {
+    public Departement modifierDepartement(int id, Departement departementModifie) {
+        Optional<Departement> departementExistant = departementRepository.findById(id);
+        if (departementExistant.isEmpty()) {
             throw new IllegalArgumentException("Département non trouvé avec l'ID : " + id);
         }
 
-        departementExistant.setCode(departementModifie.getCode());
-        departementExistant.setNom(departementModifie.getNom());
+        Departement departement = departementExistant.get();
+        departement.setCode(departementModifie.getCode());
+        departement.setNom(departementModifie.getNom());
 
-        departementDao.save(departementExistant);
-        return departementDao.findAll();
+        return departementRepository.save(departement);
     }
 
     public void deleteDepartement(int id) {
-        boolean supprime = departementDao.deleteById(id);
-        if (!supprime) {
+        if (!departementRepository.existsById(id)) {
             throw new IllegalArgumentException("Département non trouvé avec l'ID : " + id);
         }
+        departementRepository.deleteById(id);
     }
 
     public List<Ville> getTopVillesByDepartement(int departementId, int limit) {
-        Departement departement = departementDao.findById(departementId);
-        if (departement == null) {
+        if (departementRepository.findById(departementId).isEmpty()) {
             throw new IllegalArgumentException("Département non trouvé avec l'ID : " + departementId);
         }
-
-        return departementDao.findTopVillesByDepartement(departementId, limit);
+        return villeService.findTopVillesByDepartement(departementId, limit);
     }
 
     public List<Ville> getVillesByDepartementAndPopulationRange(int departementId, int minPopulation, int maxPopulation) {
-        Departement departement = departementDao.findById(departementId);
-        if (departement == null) {
+        if (departementRepository.findById(departementId).isEmpty()) {
             throw new IllegalArgumentException("Département non trouvé avec l'ID : " + departementId);
         }
 
@@ -78,6 +80,6 @@ public class DepartementService {
             throw new IllegalArgumentException("La population minimum ne peut pas être supérieure à la population maximum");
         }
 
-        return departementDao.findVillesByDepartementAndPopulationRange(departementId, minPopulation, maxPopulation);
+        return villeService.findVillesByDepartementAndPopulationBetween(departementId, minPopulation, maxPopulation);
     }
 }

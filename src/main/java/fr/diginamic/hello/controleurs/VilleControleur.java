@@ -4,11 +4,13 @@ import fr.diginamic.hello.entities.Ville;
 import fr.diginamic.hello.services.VilleService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -19,7 +21,7 @@ public class VilleControleur {
     private VilleService villeService;
 
     // GET all
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<Ville>> getVilles() {
         List<Ville> villes = villeService.extractVilles();
         return ResponseEntity.ok(villes);
@@ -28,9 +30,9 @@ public class VilleControleur {
     // GET par id
     @GetMapping("/{id}")
     public ResponseEntity<?> getVilleParId(@PathVariable int id) {
-        Ville ville = villeService.extractVille(id);
-        if (ville != null) {
-            return ResponseEntity.ok(ville);
+        Optional<Ville> ville = villeService.extractVille(id);
+        if (ville.isPresent()) {
+            return ResponseEntity.ok(ville.get());
         } else {
             return ResponseEntity.status(404).body("Ville non trouvée");
         }
@@ -39,9 +41,9 @@ public class VilleControleur {
     // GET par nom
     @GetMapping("/nom/{nom}")
     public ResponseEntity<?> getVilleParNom(@PathVariable String nom) {
-        Ville ville = villeService.extractVille(nom);
-        if (ville != null) {
-            return ResponseEntity.ok(ville);
+        Optional<Ville> ville = villeService.extractVille(nom);
+        if (ville.isPresent()) {
+            return ResponseEntity.ok(ville.get());
         } else {
             return ResponseEntity.status(404).body("Ville non trouvée");
         }
@@ -97,5 +99,70 @@ public class VilleControleur {
         }
     }
 
+
+    // Nvll routes :
+
+    // GET all avec pagination
+    @GetMapping
+    public ResponseEntity<Page<Ville>> getVilles(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Ville> villes = villeService.extractVillesPaginated(page, size);
+        return ResponseEntity.ok(villes);
+    }
+
+    // GET villes dont le nom commence par...
+    @GetMapping("/recherche/nom")
+    public ResponseEntity<List<Ville>> getVillesStartingWith(@RequestParam String prefix) {
+        List<Ville> villes = villeService.findVillesStartingWith(prefix);
+        return ResponseEntity.ok(villes);
+    }
+
+    // GET villes avec population > min
+    @GetMapping("/recherche/population/min")
+    public ResponseEntity<List<Ville>> getVillesWithMinPopulation(@RequestParam int min) {
+        List<Ville> villes = villeService.findVillesWithPopulationGreaterThan(min);
+        return ResponseEntity.ok(villes);
+    }
+
+    // GET villes avec population entre min et max
+    @GetMapping("/recherche/population/range")
+    public ResponseEntity<List<Ville>> getVillesWithPopulationRange(
+            @RequestParam int min, @RequestParam int max) {
+        try {
+            List<Ville> villes = villeService.findVillesWithPopulationBetween(min, max);
+            return ResponseEntity.ok(villes);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    // GET villes d'un département avec population > min
+    @GetMapping("/departement/{departementId}/population/min")
+    public ResponseEntity<List<Ville>> getVillesByDepartementWithMinPopulation(
+            @PathVariable int departementId, @RequestParam int min) {
+        List<Ville> villes = villeService.findVillesByDepartementAndPopulationGreaterThan(departementId, min);
+        return ResponseEntity.ok(villes);
+    }
+
+    // GET villes d'un département avec population entre min et max
+    @GetMapping("/departement/{departementId}/population/range")
+    public ResponseEntity<List<Ville>> getVillesByDepartementWithPopulationRange(
+            @PathVariable int departementId, @RequestParam int min, @RequestParam int max) {
+        try {
+            List<Ville> villes = villeService.findVillesByDepartementAndPopulationBetween(departementId, min, max);
+            return ResponseEntity.ok(villes);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    // GET top N villes d'un département
+    @GetMapping("/departement/{departementId}/top")
+    public ResponseEntity<List<Ville>> getTopVillesByDepartement(
+            @PathVariable int departementId, @RequestParam(defaultValue = "10") int limit) {
+        List<Ville> villes = villeService.findTopVillesByDepartement(departementId, limit);
+        return ResponseEntity.ok(villes);
+    }
 
 }

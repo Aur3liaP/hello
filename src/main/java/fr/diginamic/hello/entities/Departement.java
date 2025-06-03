@@ -21,8 +21,7 @@ public class Departement {
     @Size(min = 2, max = 3, message = "Le code du département doit avoir entre 2 et 3 caractères")
     private String code;
 
-    @Column(nullable = false)
-    @NotNull(message = "Le nom du département ne peut pas être nul")
+    @Column
     @Size(min = 2, message = "Le nom du département doit avoir au moins 2 caractères")
     private String nom;
 
