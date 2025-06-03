@@ -2,8 +2,8 @@ package fr.diginamic.hello.controleurs;
 
 import fr.diginamic.hello.entities.Departement;
 import fr.diginamic.hello.entities.Ville;
+import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
 import fr.diginamic.hello.services.DepartementService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +32,7 @@ public class DepartementControleur {
         if (departement.isPresent()) {
             return ResponseEntity.ok(departement.get());
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(404).body("Departement non trouvé");
 
     }
 
@@ -43,62 +43,42 @@ public class DepartementControleur {
         if (departement.isPresent()) {
             return ResponseEntity.ok(departement.get());
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(404).body("Departement non trouvé");
         }
     }
 
     //POST
     @PostMapping
-    public ResponseEntity<?> createDepartement(@Valid @RequestBody Departement departement) {
-        try {
-            Departement saved = departementService.insertDepartement(departement);
-            return ResponseEntity.ok(saved);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> createDepartement( @RequestBody Departement departement) throws ExceptionFonctionnelle {
+        Departement saved = departementService.insertDepartement(departement);
+        return ResponseEntity.ok(saved);
     }
 
     //PUT
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateDepartement(@PathVariable int id, @Valid @RequestBody Departement departementModifie) {
-        try {
-            Departement updated = departementService.modifierDepartement(id, departementModifie);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> updateDepartement(@PathVariable int id, @RequestBody Departement departementModifie) throws ExceptionFonctionnelle{
+        Departement updated = departementService.modifierDepartement(id, departementModifie);
+        return ResponseEntity.ok(updated);
     }
 
     //DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDepartement(@PathVariable int id) {
-        try {
-            departementService.deleteDepartement(id);
-            return ResponseEntity.ok("Département Supprimé");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> deleteDepartement(@PathVariable int id) throws ExceptionFonctionnelle{
+        departementService.deleteDepartement(id);
+        return ResponseEntity.ok("Département Supprimé");
     }
 
     // GET : villes les plus peuplées d’un département (avec limit)
     @GetMapping("/{id}/villes/top")
-    public ResponseEntity<?> getTopVilles(@PathVariable int id,@RequestParam(defaultValue = "5") int limit) {
-        try {
-            List<Ville> villes = departementService.getTopVillesByDepartement(id, limit);
-            return ResponseEntity.ok(villes);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> getTopVilles(@PathVariable int id,@RequestParam(defaultValue = "5") int limit) throws ExceptionFonctionnelle{
+        List<Ville> villes = departementService.getTopVillesByDepartement(id, limit);
+        return ResponseEntity.ok(villes);
     }
 
     // GET : villes par tranche de population
     @GetMapping("/{id}/villes")
-    public ResponseEntity<?> getVillesByPopulationRange(@PathVariable int id, @RequestParam int min, @RequestParam int max) {
-        try {
-            List<Ville> villes = departementService.getVillesByDepartementAndPopulationRange(id, min, max);
-            return ResponseEntity.ok(villes);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> getVillesByPopulationRange(@PathVariable int id, @RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle{
+        List<Ville> villes = departementService.getVillesByDepartementAndPopulationRange(id, min, max);
+        return ResponseEntity.ok(villes);
     }
 }

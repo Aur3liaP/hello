@@ -1,17 +1,15 @@
 package fr.diginamic.hello.controleurs;
 
 import fr.diginamic.hello.entities.Ville;
+import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
 import fr.diginamic.hello.services.VilleService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/villes")
@@ -51,52 +49,25 @@ public class VilleControleur {
 
     // POST
     @PostMapping
-    public ResponseEntity<String> ajouterVille(@Valid @RequestBody Ville nouvelleVille, BindingResult result) {
-        if (result.hasErrors()) {
-            String message = result.getFieldErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .collect(Collectors.joining(",\n"));
-            return ResponseEntity.badRequest().body(message);
-        }
-
-        try {
-            villeService.insertVille(nouvelleVille);
-            return ResponseEntity.ok("Ville insérée avec succès");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> ajouterVille(@RequestBody Ville nouvelleVille) throws ExceptionFonctionnelle {
+        villeService.insertVille(nouvelleVille);
+        return ResponseEntity.ok("Ville insérée avec succès");
     }
 
     // PUT
     @PutMapping("/{id}")
-    public ResponseEntity<String> modifierVille(@PathVariable int id, @Valid @RequestBody Ville villeModifiee,
-            BindingResult result) {
+    public ResponseEntity<String> modifierVille(@PathVariable int id, @RequestBody Ville villeModifiee) throws ExceptionFonctionnelle {
 
-        if (result.hasErrors()) {
-            String message = result.getFieldErrors().stream()
-                    .map(e -> e.getDefaultMessage())
-                    .collect(Collectors.joining(",\n"));
-            return ResponseEntity.badRequest().body(message);
-        }
-
-        try {
-            villeService.modifierVille(id, villeModifiee);
-            return ResponseEntity.ok("Ville modifiée avec succès");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        villeService.modifierVille(id, villeModifiee);
+        return ResponseEntity.ok("Ville modifiée avec succès");
     }
 
 
     // DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> supprimerVille(@PathVariable int id) {
-        try {
-            villeService.supprimerVille(id);
-            return ResponseEntity.ok("Ville supprimée avec succès");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> supprimerVille(@PathVariable int id) throws ExceptionFonctionnelle {
+        villeService.supprimerVille(id);
+        return ResponseEntity.ok("Ville supprimée avec succès");
     }
 
 
@@ -104,63 +75,49 @@ public class VilleControleur {
 
     // GET all avec pagination
     @GetMapping
-    public ResponseEntity<Page<Ville>> getVilles(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<Page<Ville>> getVilles(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         Page<Ville> villes = villeService.extractVillesPaginated(page, size);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes dont le nom commence par...
     @GetMapping("/recherche/nom")
-    public ResponseEntity<List<Ville>> getVillesStartingWith(@RequestParam String prefix) {
+    public ResponseEntity<List<Ville>> getVillesStartingWith(@RequestParam String prefix) throws ExceptionFonctionnelle {
         List<Ville> villes = villeService.findVillesStartingWith(prefix);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes avec population > min
     @GetMapping("/recherche/population/min")
-    public ResponseEntity<List<Ville>> getVillesWithMinPopulation(@RequestParam int min) {
+    public ResponseEntity<List<Ville>> getVillesWithMinPopulation(@RequestParam int min) throws ExceptionFonctionnelle {
         List<Ville> villes = villeService.findVillesWithPopulationGreaterThan(min);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes avec population entre min et max
     @GetMapping("/recherche/population/range")
-    public ResponseEntity<List<Ville>> getVillesWithPopulationRange(
-            @RequestParam int min, @RequestParam int max) {
-        try {
-            List<Ville> villes = villeService.findVillesWithPopulationBetween(min, max);
-            return ResponseEntity.ok(villes);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+    public ResponseEntity<List<Ville>> getVillesWithPopulationRange( @RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle {
+        List<Ville> villes = villeService.findVillesWithPopulationBetween(min, max);
+        return ResponseEntity.ok(villes);
     }
 
     // GET villes d'un département avec population > min
     @GetMapping("/departement/{departementId}/population/min")
-    public ResponseEntity<List<Ville>> getVillesByDepartementWithMinPopulation(
-            @PathVariable int departementId, @RequestParam int min) {
+    public ResponseEntity<List<Ville>> getVillesByDepartementWithMinPopulation(@PathVariable int departementId, @RequestParam int min) throws ExceptionFonctionnelle {
         List<Ville> villes = villeService.findVillesByDepartementAndPopulationGreaterThan(departementId, min);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes d'un département avec population entre min et max
     @GetMapping("/departement/{departementId}/population/range")
-    public ResponseEntity<List<Ville>> getVillesByDepartementWithPopulationRange(
-            @PathVariable int departementId, @RequestParam int min, @RequestParam int max) {
-        try {
-            List<Ville> villes = villeService.findVillesByDepartementAndPopulationBetween(departementId, min, max);
-            return ResponseEntity.ok(villes);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+    public ResponseEntity<List<Ville>> getVillesByDepartementWithPopulationRange(@PathVariable int departementId, @RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle {
+        List<Ville> villes = villeService.findVillesByDepartementAndPopulationBetween(departementId, min, max);
+        return ResponseEntity.ok(villes);
     }
 
     // GET top N villes d'un département
     @GetMapping("/departement/{departementId}/top")
-    public ResponseEntity<List<Ville>> getTopVillesByDepartement(
-            @PathVariable int departementId, @RequestParam(defaultValue = "10") int limit) {
+    public ResponseEntity<List<Ville>> getTopVillesByDepartement(@PathVariable int departementId, @RequestParam(defaultValue = "10") int limit) throws ExceptionFonctionnelle {
         List<Ville> villes = villeService.findTopVillesByDepartement(departementId, limit);
         return ResponseEntity.ok(villes);
     }

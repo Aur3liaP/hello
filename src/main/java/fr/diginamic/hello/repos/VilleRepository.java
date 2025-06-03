@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -55,5 +54,8 @@ public interface VilleRepository extends JpaRepository<Ville, Integer> {
     // Vérifier l'existence par nom
     boolean existsByNomIgnoreCase(String nom);
 
+    // Vérifier par nom et par département
+    boolean existsByNomIgnoreCaseAndDepartementId(String nom, int departementId);
 
+    boolean existsByNomIgnoreCaseAndDepartementIdAndIdNot(String nom, int departementId, int villeId);
 }

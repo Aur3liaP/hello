@@ -21,4 +21,6 @@ public interface DepartementRepository extends JpaRepository<Departement, Intege
 
     boolean existsByNomIgnoreCase(String nom);
 
+    boolean existsByCodeAndIdNot(String code, int id);
+
 }
