@@ -1,6 +1,6 @@
 package fr.diginamic.hello.controleurs;
 
-import fr.diginamic.hello.entities.Ville;
+import fr.diginamic.hello.dto.VilleDto;
 import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
 import fr.diginamic.hello.services.VilleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,22 +13,24 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/villes")
-public class VilleControleur {
+public class VilleControleur implements IVilleControleur {
 
     @Autowired
     private VilleService villeService;
 
     // GET all
     @GetMapping("/all")
-    public ResponseEntity<List<Ville>> getVilles() {
-        List<Ville> villes = villeService.extractVilles();
+    @Override
+    public ResponseEntity<List<VilleDto>> getVilles() {
+        List<VilleDto> villes = villeService.extractVilles();
         return ResponseEntity.ok(villes);
     }
 
     // GET par id
     @GetMapping("/{id}")
+    @Override
     public ResponseEntity<?> getVilleParId(@PathVariable int id) {
-        Optional<Ville> ville = villeService.extractVille(id);
+        Optional<VilleDto> ville = villeService.extractVille(id);
         if (ville.isPresent()) {
             return ResponseEntity.ok(ville.get());
         } else {
@@ -38,8 +40,9 @@ public class VilleControleur {
 
     // GET par nom
     @GetMapping("/nom/{nom}")
+    @Override
     public ResponseEntity<?> getVilleParNom(@PathVariable String nom) {
-        Optional<Ville> ville = villeService.extractVille(nom);
+        Optional<VilleDto> ville = villeService.extractVille(nom);
         if (ville.isPresent()) {
             return ResponseEntity.ok(ville.get());
         } else {
@@ -49,14 +52,16 @@ public class VilleControleur {
 
     // POST
     @PostMapping
-    public ResponseEntity<String> ajouterVille(@RequestBody Ville nouvelleVille) throws ExceptionFonctionnelle {
+    @Override
+    public ResponseEntity<String> ajouterVille(@RequestBody VilleDto nouvelleVille) throws ExceptionFonctionnelle {
         villeService.insertVille(nouvelleVille);
         return ResponseEntity.ok("Ville insérée avec succès");
     }
 
     // PUT
     @PutMapping("/{id}")
-    public ResponseEntity<String> modifierVille(@PathVariable int id, @RequestBody Ville villeModifiee) throws ExceptionFonctionnelle {
+    @Override
+    public ResponseEntity<String> modifierVille(@PathVariable int id, @RequestBody VilleDto villeModifiee) throws ExceptionFonctionnelle {
 
         villeService.modifierVille(id, villeModifiee);
         return ResponseEntity.ok("Ville modifiée avec succès");
@@ -65,6 +70,7 @@ public class VilleControleur {
 
     // DELETE
     @DeleteMapping("/{id}")
+    @Override
     public ResponseEntity<String> supprimerVille(@PathVariable int id) throws ExceptionFonctionnelle {
         villeService.supprimerVille(id);
         return ResponseEntity.ok("Ville supprimée avec succès");
@@ -75,50 +81,57 @@ public class VilleControleur {
 
     // GET all avec pagination
     @GetMapping
-    public ResponseEntity<Page<Ville>> getVilles(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        Page<Ville> villes = villeService.extractVillesPaginated(page, size);
+    @Override
+    public ResponseEntity<Page<VilleDto>> getVilles(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        Page<VilleDto> villes = villeService.extractVillesPaginated(page, size);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes dont le nom commence par...
     @GetMapping("/recherche/nom")
-    public ResponseEntity<List<Ville>> getVillesStartingWith(@RequestParam String prefix) throws ExceptionFonctionnelle {
-        List<Ville> villes = villeService.findVillesStartingWith(prefix);
+    @Override
+    public ResponseEntity<List<VilleDto>> getVillesStartingWith(@RequestParam String prefix) throws ExceptionFonctionnelle {
+        List<VilleDto> villes = villeService.findVillesStartingWith(prefix);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes avec population > min
     @GetMapping("/recherche/population/min")
-    public ResponseEntity<List<Ville>> getVillesWithMinPopulation(@RequestParam int min) throws ExceptionFonctionnelle {
-        List<Ville> villes = villeService.findVillesWithPopulationGreaterThan(min);
+    @Override
+    public ResponseEntity<List<VilleDto>> getVillesWithMinPopulation(@RequestParam int min) throws ExceptionFonctionnelle {
+        List<VilleDto> villes = villeService.findVillesWithPopulationGreaterThan(min);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes avec population entre min et max
     @GetMapping("/recherche/population/range")
-    public ResponseEntity<List<Ville>> getVillesWithPopulationRange( @RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle {
-        List<Ville> villes = villeService.findVillesWithPopulationBetween(min, max);
+    @Override
+    public ResponseEntity<List<VilleDto>> getVillesWithPopulationRange(@RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle {
+        List<VilleDto> villes = villeService.findVillesWithPopulationBetween(min, max);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes d'un département avec population > min
     @GetMapping("/departement/{departementId}/population/min")
-    public ResponseEntity<List<Ville>> getVillesByDepartementWithMinPopulation(@PathVariable int departementId, @RequestParam int min) throws ExceptionFonctionnelle {
-        List<Ville> villes = villeService.findVillesByDepartementAndPopulationGreaterThan(departementId, min);
+    @Override
+    public ResponseEntity<List<VilleDto>> getVillesByDepartementWithMinPopulation(@PathVariable int departementId, @RequestParam int min) throws ExceptionFonctionnelle {
+        List<VilleDto> villes = villeService.findVillesByDepartementAndPopulationGreaterThan(departementId, min);
         return ResponseEntity.ok(villes);
     }
 
     // GET villes d'un département avec population entre min et max
     @GetMapping("/departement/{departementId}/population/range")
-    public ResponseEntity<List<Ville>> getVillesByDepartementWithPopulationRange(@PathVariable int departementId, @RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle {
-        List<Ville> villes = villeService.findVillesByDepartementAndPopulationBetween(departementId, min, max);
+    @Override
+    public ResponseEntity<List<VilleDto>> getVillesByDepartementWithPopulationRange(@PathVariable int departementId, @RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle {
+        List<VilleDto> villes = villeService.findVillesByDepartementAndPopulationBetween(departementId, min, max);
         return ResponseEntity.ok(villes);
     }
 
     // GET top N villes d'un département
     @GetMapping("/departement/{departementId}/top")
-    public ResponseEntity<List<Ville>> getTopVillesByDepartement(@PathVariable int departementId, @RequestParam(defaultValue = "10") int limit) throws ExceptionFonctionnelle {
-        List<Ville> villes = villeService.findTopVillesByDepartement(departementId, limit);
+    @Override
+    public ResponseEntity<List<VilleDto>> getTopVillesByDepartement(@PathVariable int departementId, @RequestParam(defaultValue = "10") int limit) throws ExceptionFonctionnelle {
+        List<VilleDto> villes = villeService.findTopVillesByDepartement(departementId, limit);
         return ResponseEntity.ok(villes);
     }
 

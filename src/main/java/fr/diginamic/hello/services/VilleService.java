@@ -1,5 +1,7 @@
 package fr.diginamic.hello.services;
 
+import fr.diginamic.hello.Utils.DtoConverterUtils;
+import fr.diginamic.hello.dto.VilleDto;
 import fr.diginamic.hello.entities.Departement;
 import fr.diginamic.hello.entities.Ville;
 import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class VilleService {
@@ -24,38 +27,53 @@ public class VilleService {
     @Autowired
     private DepartementRepository departementRepository;
 
-    public List<Ville> extractVilles() {
-        return villeRepository.findAll();
+    @Autowired
+    private DtoConverterUtils dtoConverterUtils;
+
+
+    public List<VilleDto> extractVilles() {
+        return villeRepository.findAll().stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
     }
 
-    public Optional<Ville> extractVille(int id) {
-        return villeRepository.findById(id);
+    public Optional<VilleDto> extractVille(int id) {
+        return villeRepository.findById(id)
+                .map(VilleDto::new);
     }
 
-    public Optional<Ville> extractVille(String nom) {
-        return villeRepository.findByNomIgnoreCase(nom);
+    public Optional<VilleDto> extractVille(String nom) {
+        return villeRepository.findByNomIgnoreCase(nom)
+                .map(VilleDto::new);
     }
 
-    public Ville insertVille(Ville ville) throws ExceptionFonctionnelle {
+    public VilleDto insertVille(VilleDto villeDto) throws ExceptionFonctionnelle {
+        // Conversion DTO vers entité
+        Ville ville = dtoConverterUtils.convertirVilleDtoVersEntite(villeDto);
+
         validerVille(ville, null);
-        return villeRepository.save(ville);
+
+        Ville villeSauvee = villeRepository.save(ville);
+        return new VilleDto(villeSauvee);
     }
 
-    public Ville modifierVille(int id, Ville villeModifiee) throws ExceptionFonctionnelle{
-
+    public VilleDto modifierVille(int id, VilleDto villeDtoModifiee) throws ExceptionFonctionnelle{
         Optional<Ville> villeExiste = villeRepository.findById(id);
         if (villeExiste.isEmpty()) {
             throw new ExceptionFonctionnelle("Ville non trouvée avec l'ID : " + id);
         }
 
         Ville ville = villeExiste.get();
+        Ville villeModifiee = dtoConverterUtils.convertirVilleDtoVersEntite(villeDtoModifiee);
+
         validerVille(villeModifiee, ville.getId());
 
         ville.setNom(villeModifiee.getNom());
         ville.setNbHabitants(villeModifiee.getNbHabitants());
         ville.setDepartement(villeModifiee.getDepartement());
 
-        return villeRepository.save(ville);
+        Ville villeSauvee = villeRepository.save(ville);
+        return new VilleDto(villeSauvee);
     }
 
     public void supprimerVille(int id) throws ExceptionFonctionnelle {
@@ -65,15 +83,14 @@ public class VilleService {
         villeRepository.deleteById(id);
     }
 
-
-    // Nvll méthodes
-
-    public Page<Ville> extractVillesPaginated(int page, int size) {
+    // Nouvelles méthodes avec DTOs
+    public Page<VilleDto> extractVillesPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return villeRepository.findAll(pageable);
+        Page<Ville> villesPage = villeRepository.findAll(pageable);
+        return villesPage.map(VilleDto::new);
     }
 
-    public List<Ville> findVillesStartingWith(String prefix) throws ExceptionFonctionnelle{
+    public List<VilleDto> findVillesStartingWith(String prefix) throws ExceptionFonctionnelle{
         if (prefix == null || prefix.trim().isEmpty()) {
             throw new ExceptionFonctionnelle("Le préfixe de recherche ne peut pas être vide");
         }
@@ -84,10 +101,12 @@ public class VilleService {
             throw new ExceptionFonctionnelle("Aucune ville dont le nom commence par " + prefix + " n'a été trouvée");
         }
 
-        return villes;
+        return villes.stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
     }
 
-    public List<Ville> findVillesWithPopulationGreaterThan(int min) throws ExceptionFonctionnelle{
+    public List<VilleDto> findVillesWithPopulationGreaterThan(int min) throws ExceptionFonctionnelle{
         if (min < 0) {
             throw new ExceptionFonctionnelle("La population minimum doit être positive");
         }
@@ -98,10 +117,12 @@ public class VilleService {
             throw new ExceptionFonctionnelle("Aucune ville n'a une population supérieure à " + min);
         }
 
-        return villes;
+        return villes.stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
     }
 
-    public List<Ville> findVillesWithPopulationBetween(int min, int max) throws ExceptionFonctionnelle{
+    public List<VilleDto> findVillesWithPopulationBetween(int min, int max) throws ExceptionFonctionnelle{
         if (min < 0 || max < 0) {
             throw new ExceptionFonctionnelle("Les valeurs de population doivent être positives");
         }
@@ -116,10 +137,12 @@ public class VilleService {
             throw new ExceptionFonctionnelle("Aucune ville n'a une population comprise entre " + min + " et " + max);
         }
 
-        return villes;
+        return villes.stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
     }
 
-    public List<Ville> findVillesByDepartementAndPopulationGreaterThan(int departementId, int min) throws ExceptionFonctionnelle{
+    public List<VilleDto> findVillesByDepartementAndPopulationGreaterThan(int departementId, int min) throws ExceptionFonctionnelle{
         Optional<Departement> departement = departementRepository.findById(departementId);
         if (departement.isEmpty()) {
             throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + departementId);
@@ -136,10 +159,12 @@ public class VilleService {
                     " dans le département " + departement.get().getCode());
         }
 
-        return villes;
+        return villes.stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
     }
 
-    public List<Ville> findVillesByDepartementAndPopulationBetween(int departementId, int min, int max) throws ExceptionFonctionnelle {
+    public List<VilleDto> findVillesByDepartementAndPopulationBetween(int departementId, int min, int max) throws ExceptionFonctionnelle {
         Optional<Departement> departement = departementRepository.findById(departementId);
         if (departement.isEmpty()) {
             throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + departementId);
@@ -160,10 +185,12 @@ public class VilleService {
                     " dans le département " + departement.get().getCode());
         }
 
-        return villes;
+        return villes.stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
     }
 
-    public List<Ville> findTopVillesByDepartement(int departementId, int limit) throws ExceptionFonctionnelle {
+    public List<VilleDto> findTopVillesByDepartement(int departementId, int limit) throws ExceptionFonctionnelle {
         Optional<Departement> departement = departementRepository.findById(departementId);
         if (departement.isEmpty()) {
             throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + departementId);
@@ -180,8 +207,14 @@ public class VilleService {
             throw new ExceptionFonctionnelle("Aucune ville trouvée dans le département " + departement.get().getCode());
         }
 
-        return villes;
+        return villes.stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
     }
+
+    // Méthodes Utilitaires
+
+
 
     private void validerVille(Ville ville, Integer idVilleAExclure) throws ExceptionFonctionnelle {
         List<String> erreurs = new ArrayList<>();
@@ -214,10 +247,8 @@ public class VilleService {
         }
 
         if (!erreurs.isEmpty()) {
-            String messageErreur = String.join("\n", erreurs); // Séparateur par ligne
+            String messageErreur = String.join("\n", erreurs);
             throw new ExceptionFonctionnelle(messageErreur);
         }
-
     }
-
 }

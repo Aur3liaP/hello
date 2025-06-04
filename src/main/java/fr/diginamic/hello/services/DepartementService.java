@@ -1,7 +1,9 @@
 package fr.diginamic.hello.services;
 
+import fr.diginamic.hello.Utils.DtoConverterUtils;
+import fr.diginamic.hello.dto.DepartementDto;
+import fr.diginamic.hello.dto.VilleDto;
 import fr.diginamic.hello.entities.Departement;
-import fr.diginamic.hello.entities.Ville;
 import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
 import fr.diginamic.hello.repos.DepartementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class DepartementService {
@@ -20,36 +23,51 @@ public class DepartementService {
     @Autowired
     private VilleService villeService;
 
-    public List<Departement> getAllDepartements() {
-        return departementRepository.findAll();
+    @Autowired
+    private DtoConverterUtils dtoConverterUtils;
+
+    public List<DepartementDto> getAllDepartements() {
+        return departementRepository.findAll().stream()
+                .map(DepartementDto::new)
+                .collect(Collectors.toList());
     }
 
-    public Optional<Departement> getDepartementById(int id) {
-        return departementRepository.findById(id);
+    public Optional<DepartementDto> getDepartementById(int id) {
+        return departementRepository.findById(id)
+                .map(DepartementDto::new);
     }
 
-    public Optional<Departement> getDepartementByCode(String code) {
-        return departementRepository.findByCode(code);
+    public Optional<DepartementDto> getDepartementByCode(String code) {
+        return departementRepository.findByCode(code)
+                .map(DepartementDto::new);
     }
 
-    public Departement insertDepartement(Departement departement) throws ExceptionFonctionnelle{
+    public DepartementDto insertDepartement(DepartementDto departementDto) throws ExceptionFonctionnelle{
+        // Conversion DTO vers entité
+        Departement departement = dtoConverterUtils.convertirDepartementDtoVersEntite(departementDto);
+
         validerDepartement(departement, null);
-        return departementRepository.save(departement);
+
+        Departement departementSauve = departementRepository.save(departement);
+        return new DepartementDto(departementSauve);
     }
 
-    public Departement modifierDepartement(int id, Departement departementModifie) throws ExceptionFonctionnelle{
+    public DepartementDto modifierDepartement(int id, DepartementDto departementDtoModifie) throws ExceptionFonctionnelle{
         Optional<Departement> departementExistant = departementRepository.findById(id);
         if (departementExistant.isEmpty()) {
             throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + id);
         }
 
         Departement departement = departementExistant.get();
+        Departement departementModifie = dtoConverterUtils.convertirDepartementDtoVersEntite(departementDtoModifie);
+
         validerDepartement(departementModifie, departement.getId());
 
         departement.setCode(departementModifie.getCode());
         departement.setNom(departementModifie.getNom());
 
-        return departementRepository.save(departement);
+        Departement departementSauve = departementRepository.save(departement);
+        return new DepartementDto(departementSauve);
     }
 
     public void deleteDepartement(int id) throws ExceptionFonctionnelle{
@@ -59,14 +77,14 @@ public class DepartementService {
         departementRepository.deleteById(id);
     }
 
-    public List<Ville> getTopVillesByDepartement(int departementId, int limit) throws ExceptionFonctionnelle{
+    public List<VilleDto> getTopVillesByDepartement(int departementId, int limit) throws ExceptionFonctionnelle{
         if (departementRepository.findById(departementId).isEmpty()) {
             throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + departementId);
         }
         return villeService.findTopVillesByDepartement(departementId, limit);
     }
 
-    public List<Ville> getVillesByDepartementAndPopulationRange(int departementId, int minPopulation, int maxPopulation) throws ExceptionFonctionnelle{
+    public List<VilleDto> getVillesByDepartementAndPopulationRange(int departementId, int minPopulation, int maxPopulation) throws ExceptionFonctionnelle{
         if (departementRepository.findById(departementId).isEmpty()) {
             throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + departementId);
         }
@@ -82,6 +100,10 @@ public class DepartementService {
         return villeService.findVillesByDepartementAndPopulationBetween(departementId, minPopulation, maxPopulation);
     }
 
+
+    // Méthode utilitaire pour convertir DTO vers entité
+
+
     private void validerDepartement(Departement departement, Integer idDepartementAExclure) throws ExceptionFonctionnelle {
         List<String> erreurs = new ArrayList<>();
 
@@ -89,10 +111,8 @@ public class DepartementService {
             erreurs.add("Le nom du département doit contenir au moins 3 lettres.");
         }
 
-        boolean nomExistant = departementRepository.existsByNomIgnoreCase(departement.getNom());
-
-        if (nomExistant) {
-            erreurs.add("Un département avec ce nom existe déjà.");
+        if (departement.getCode() == null || departement.getCode().length() != 2) {
+            erreurs.add("Le code du département doit contenir exactement 2 caractères.");
         }
 
         if (erreurs.isEmpty()) {
@@ -109,9 +129,8 @@ public class DepartementService {
         }
 
         if (!erreurs.isEmpty()) {
-            String messageErreur = String.join("\n", erreurs); // Séparateur par ligne
+            String messageErreur = String.join("\n", erreurs);
             throw new ExceptionFonctionnelle(messageErreur);
         }
     }
-
 }
