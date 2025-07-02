@@ -1,13 +1,17 @@
 package fr.diginamic.hello.controleurs;
 
+import com.itextpdf.text.DocumentException;
 import fr.diginamic.hello.dto.VilleDto;
 import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
 import fr.diginamic.hello.services.VilleService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.io.PrintWriter;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -134,5 +138,29 @@ public class VilleControleur implements IVilleControleur {
         List<VilleDto> villes = villeService.findTopVillesByDepartement(departementId, limit);
         return ResponseEntity.ok(villes);
     }
+
+    // Export CSV
+    @GetMapping("/export")
+    public void exportCSV(@RequestParam int min, HttpServletResponse response) throws IOException,
+            ExceptionFonctionnelle, DocumentException {
+        response.setContentType("text/csv; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"villes_export.csv\"");
+
+        List<VilleDto> villes = villeService.findVillesWithPopulationGreaterThan(min);
+
+        response.getWriter().append("Nom de la ville;Nombre d'habitants;Code département;Nom du département;\n");
+
+        for (VilleDto ville : villes) {
+            response.getWriter()
+                    .append(ville.getNom()).append(";")
+                    .append(String.valueOf(ville.getNbHabitants())).append(";")
+                    .append(ville.getDepartement().getCode()).append(";")
+                    .append(ville.getDepartement().getNom())
+                    .append("\n");
+        }
+
+        response.flushBuffer();
+    }
+
 
 }

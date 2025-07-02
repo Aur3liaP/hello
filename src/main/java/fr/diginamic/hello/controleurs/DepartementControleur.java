@@ -1,13 +1,17 @@
 package fr.diginamic.hello.controleurs;
 
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.*;
 import fr.diginamic.hello.dto.DepartementDto;
 import fr.diginamic.hello.dto.VilleDto;
 import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
 import fr.diginamic.hello.services.DepartementService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,5 +92,58 @@ public class DepartementControleur implements IDepartementControleur {
     public ResponseEntity<?> getVillesByPopulationRange(@PathVariable int id, @RequestParam int min, @RequestParam int max) throws ExceptionFonctionnelle{
         List<VilleDto> villes = departementService.getVillesByDepartementAndPopulationRange(id, min, max);
         return ResponseEntity.ok(villes);
+    }
+
+    // Export PDF
+    @GetMapping("/export/{code}")
+    public void exportDepartement(@PathVariable String code, HttpServletResponse response) throws IOException,
+            DocumentException, ExceptionFonctionnelle {
+        DepartementDto departement = departementService.getDepartementByCode(code)
+                .orElseThrow(() -> new ExceptionFonctionnelle("Département non trouvé avec le code : " + code));
+
+        List<VilleDto> villes = departementService.getAllVillesByDepartementCode(code);
+
+        response.setHeader("Content-Disposition", "attachment; filename=\"export_departement.pdf\"");
+
+        Document document = new Document(PageSize.A4);
+        PdfWriter.getInstance(document, response.getOutputStream());
+        document.open();
+
+        Font titreFont = new Font(Font.FontFamily.HELVETICA, 20, Font.BOLD, BaseColor.DARK_GRAY);
+        Paragraph titre = new Paragraph("Département : " + departement.getCode(), titreFont);
+        titre.setAlignment(Element.ALIGN_CENTER);
+        titre.setSpacingAfter(20f);
+        document.add(titre);
+
+
+        Font infoFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL, BaseColor.BLACK);
+        document.add(new Paragraph("Code département : " + departement.getCode(), infoFont));
+        document.add(new Paragraph("Nom département : " + departement.getNom(), infoFont));
+        document.add(Chunk.NEWLINE);
+
+        PdfPTable table = new PdfPTable(2);
+        table.setWidthPercentage(100);
+        table.setWidths(new int[]{3, 2});
+
+        Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE);
+        PdfPCell cell;
+
+        cell = new PdfPCell(new Phrase("Nom de la ville", headerFont));
+        cell.setBackgroundColor(BaseColor.GRAY);
+        table.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Population", headerFont));
+        cell.setBackgroundColor(BaseColor.GRAY);
+        table.addCell(cell);
+
+        Font rowFont = new Font(Font.FontFamily.HELVETICA, 12);
+        for (VilleDto ville : villes) {
+            table.addCell(new Phrase(ville.getNom(), rowFont));
+            table.addCell(new Phrase(String.valueOf(ville.getNbHabitants()), rowFont));
+        }
+
+        document.add(table);
+        document.close();
+        response.flushBuffer();
     }
 }

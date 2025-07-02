@@ -58,4 +58,8 @@ public interface VilleRepository extends JpaRepository<Ville, Integer> {
     boolean existsByNomIgnoreCaseAndDepartementId(String nom, int departementId);
 
     boolean existsByNomIgnoreCaseAndDepartementIdAndIdNot(String nom, int departementId, int villeId);
+
+    @EntityGraph(attributePaths = {"departement"})
+    List<Ville> findVillesByDepartement_Code(@Param("departementCode") String departementCode);
+
 }

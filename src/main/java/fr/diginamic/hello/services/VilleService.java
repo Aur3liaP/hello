@@ -212,6 +212,23 @@ public class VilleService {
                 .collect(Collectors.toList());
     }
 
+    public List<VilleDto> findVillesByDepartement(String departementCode) throws ExceptionFonctionnelle {
+        Optional<Departement> departement = departementRepository.findByCode(departementCode);
+        if (departement.isEmpty()) {
+            throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + departementCode);
+        }
+
+        List<Ville> villes = villeRepository.findVillesByDepartement_Code(departementCode);
+
+        if (villes.isEmpty()) {
+            throw new ExceptionFonctionnelle("Aucune ville trouvée dans le département " + departement.get().getCode());
+        }
+
+        return villes.stream()
+                .map(VilleDto::new)
+                .collect(Collectors.toList());
+    }
+
     // Méthodes Utilitaires
 
 

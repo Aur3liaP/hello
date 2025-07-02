@@ -6,6 +6,7 @@ import fr.diginamic.hello.dto.VilleDto;
 import fr.diginamic.hello.entities.Departement;
 import fr.diginamic.hello.exceptions.ExceptionFonctionnelle;
 import fr.diginamic.hello.repos.DepartementRepository;
+import fr.diginamic.hello.repos.VilleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,9 @@ public class DepartementService {
 
     @Autowired
     private DepartementRepository departementRepository;
+
+    @Autowired
+    private VilleRepository villeRepository;
 
     @Autowired
     private VilleService villeService;
@@ -98,6 +102,13 @@ public class DepartementService {
         }
 
         return villeService.findVillesByDepartementAndPopulationBetween(departementId, minPopulation, maxPopulation);
+    }
+
+    public List<VilleDto> getAllVillesByDepartementCode(String departemenCode) throws ExceptionFonctionnelle {
+        if (departementRepository.findByCode(departemenCode).isEmpty()) {
+            throw new ExceptionFonctionnelle("Département non trouvé avec l'ID : " + departemenCode);
+        }
+        return villeService.findVillesByDepartement(departemenCode);
     }
 
 
